@@ -11,6 +11,7 @@ class App extends Component {
     this.submitPlayer = this.submitPlayer.bind(this)
     this.startTournament = this.startTournament.bind(this)
     this.submitMatch = this.submitMatch.bind(this)
+    this.requeueMatch = this.requeueMatch.bind(this)
 
     $.get('./adjectivelist.txt', {}, (content) => {
       this.adjectives = content.split('\n');
@@ -229,6 +230,12 @@ class App extends Component {
     this.setState({ playerName: event.target.value });
   }
 
+  requeueMatch(event, index) {
+    event.preventDefault()
+
+    console.log(event, index)
+  }
+
   submitMatch(event) {
     event.preventDefault()
 
@@ -242,7 +249,7 @@ class App extends Component {
 
     var loserExtraCups = parseInt($("input[name='loserExtraCups']", event.target).val(), 10);
 
-    if(!loserExtraCups) {
+    if(isNaN(loserExtraCups)) {
       alert('Must include # of extra cups to submit!')
       return
     }
@@ -478,6 +485,9 @@ class App extends Component {
             <b>How many cups did the losing team have remaining?</b><br/>
             <input type="text" name="loserExtraCups" />
             <input type="submit" value="Submit"/>
+          </form>
+          <form data-index={ i } onSubmit={ this.requeueMatch }>
+            <input type="submit" value="Requeue Match"/>
           </form>
         </div>
       )
