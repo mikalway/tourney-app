@@ -3,7 +3,59 @@
   flex-direction: row;
 }
 
-#start {
+.team-intro-parent {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.team-intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  color: white;
+}
+
+.team-intro-name {
+  font-size: 80px;
+}
+
+.team-intro-image {
+  max-width: 1000px;
+  max-height: 1000px;
+  margin: 50px;
+}
+
+.team-intro-players {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-intro-players.hidden {
+  opacity: 0;
+}
+
+.team-intro-player {
+  font-size: 60px;
+  margin: 0 30px;
+}
+
+.team-intro-and {
+  font-size: 40px;
 }
 
 #submit-player {

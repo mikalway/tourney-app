@@ -13,6 +13,10 @@ class App extends Component {
     this.submitMatch = this.submitMatch.bind(this)
     this.requeueMatch = this.requeueMatch.bind(this)
 
+    if(localStorage.getItem('renderIntro') === null) {
+      localStorage.setItem('renderIntro', true)
+    }
+
     $.get('./adjectivelist.txt', {}, (content) => {
       this.adjectives = content.split('\n');
     });
@@ -27,6 +31,7 @@ class App extends Component {
     this.fetchTeams()
     this.fetchGroups()
     this.fetchMatches()
+
 
     this.client = new googleImages('004764128469374828995:febdo0di9ju', 'AIzaSyDbbEZdAYhyCIIRaiIyLulbQz29owX4ihU')
   }
@@ -83,6 +88,7 @@ class App extends Component {
 
   startTournament(event) {
     event.preventDefault()
+
     var teams = this.randomizeTeams(this.state.players, this.state.players.length / 2)
 
     var parsedTeams = []
@@ -94,12 +100,13 @@ class App extends Component {
       tempTeam.playerId2 = element[1]._id
 
       const teamAdjective = this.getRandomAdjective()
-      tempTeam.name = teamAdjective + ' ' + this.getRandomNoun()
+      const teamNoun = this.getRandomNoun()
+      tempTeam.name = teamAdjective + ' ' + teamNoun
 
       this.client.search(teamAdjective).then((images) => {
-        console.log(tempTeam, images)
-        tempTeam.image = images[Math.floor(Math.random() * 10)].url
-
+        const imageIndex = Math.floor(Math.random() * 10)
+        tempTeam.image = images[imageIndex].url
+        tempTeam.backupImage = images[(imageIndex + 1) % 10].url
         parsedTeams.push(tempTeam)
         this.postData('http://localhost:8000/teams/', tempTeam).then((response) => {
           postedTeamCount++;
@@ -199,7 +206,26 @@ class App extends Component {
   }
 
   randomizeTeams(names, teamsCount) {
-    var teams = [];
+    var teams = []
+
+    // for forcing a team to be premade
+    var tempTeamArray = []
+    for(var i = 0; i < names.length; i++) {
+      console.log(names[i])
+      if(names[i].name === 'test1' || names[i].name === 'test6') {
+        tempTeamArray.push(names[i])
+        names.splice(i, 1)
+        i--
+      }  
+    }
+    
+    if(tempTeamArray.length === 1) {
+      names.push(tempTeamArray[0])
+    } else if(tempTeamArray.length === 2) {
+      teamsCount--
+      teams.push(tempTeamArray)
+    }
+
     while (teamsCount > 0) {
       teams.push(this.shuffle(names).splice(0, Math.floor(names.length / teamsCount)))
       teamsCount--;
@@ -230,10 +256,13 @@ class App extends Component {
     this.setState({ playerName: event.target.value });
   }
 
-  requeueMatch(event, index) {
+  requeueMatch(event) {
     event.preventDefault()
 
-    console.log(event, index)
+    const matches = this.state.matches
+    const index = $(event.target).data('index')
+    matches[0].todo.push(matches[0].todo.splice(index, 1)[0])
+    this.setState({ matches })
   }
 
   submitMatch(event) {
@@ -585,15 +614,60 @@ class App extends Component {
     )
   }
 
+  clickTeamIntro(event) {
+    const playersObject = $($('.team-intro-players', event.currentTarget)[0])
+    if(playersObject.hasClass('hidden')) {
+      playersObject.removeClass('hidden')
+    } else {
+      $(event.currentTarget).remove()
+    }
+  }
+
+  renderTeamIntro(team) {
+    const player1 = this.getPlayerById(team.playerId1)
+    const player2 = this.getPlayerById(team.playerId2)
+
+    const key = 'intro' + team.name
+    return (
+      <div key={ key } className="team-intro" onClick={ this.clickTeamIntro }>
+        <div className="team-intro-name">{ team.name }</div>
+        <img className="team-intro-image" alt="Team" src={ team.image }/>
+        <div className="team-intro-players hidden">
+          <div className="team-intro-player">{ player1.name }</div>
+          <div className="team-intro-and">and</div>
+          <div className="team-intro-player">{ player2.name }</div>
+        </div>
+      </div>
+    )
+  }
+
+  removeIntros(event) {
+    localStorage.setItem('renderIntro', false)
+  }
+
+  renderTeamIntros() {
+    return (
+      <div className="team-intro-parent">
+        <form onSubmit={ this.removeIntros }>
+          <input type="submit" value="Exit"/>
+        </form>
+        { this.state.teams.map((team) => this.renderTeamIntro(team)) }
+      </div>
+    )
+  }
+
   render() {
     if (!this.state) return ''
 
     const tournamentStarted = this.state.teams && this.state.teams.length > 0
+    const renderIntro = localStorage.getItem('renderIntro') === 'true'
+
     return (
       <div className="App">
         
-        { !tournamentStarted ? this.renderSubmitPlayer() : '' }
-        { !tournamentStarted ? this.renderStartTournament() : '' }
+        { !tournamentStarted && this.renderSubmitPlayer() }
+        { !tournamentStarted && this.renderStartTournament() }
+        { tournamentStarted && renderIntro && this.renderTeamIntros() }
 
         <div className="player-parent">
           <div className="title">Players{ this.state.players 
