@@ -1,0 +1,8 @@
+.TournamentUpcomingMatches {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 20px;
+  min-width: 500px;
+}

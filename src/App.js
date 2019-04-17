@@ -1,5 +1,15 @@
 import React, { Component } from 'react'
 import './App.css'
+import './Tournament/Matches/Matches.css'
+
+import TournamentIntros from './Tournament/Intros/Intros.js'
+import TournamentPlayers from './Tournament/Players/Players.js'
+import TournamentTeams from './Tournament/Teams/Teams.js'
+import TournamentGroups from './Tournament/Groups/Groups.js'
+import TournamentCurrentMatches from './Tournament/Matches/Current/CurrentMatches.js'
+import TournamentUpcomingMatches from './Tournament/Matches/Upcoming/UpcomingMatches.js'
+import TournamentCompletedMatches from './Tournament/Matches/Completed/CompletedMatches.js'
+
 import $ from 'jquery'
 import googleImages from 'google-images'
 
@@ -10,8 +20,6 @@ class App extends Component {
     this.handleNameChange = this.handleNameChange.bind(this)
     this.submitPlayer = this.submitPlayer.bind(this)
     this.startTournament = this.startTournament.bind(this)
-    this.submitMatch = this.submitMatch.bind(this)
-    this.requeueMatch = this.requeueMatch.bind(this)
 
     if(localStorage.getItem('renderIntro') === null) {
       localStorage.setItem('renderIntro', true)
@@ -24,6 +32,8 @@ class App extends Component {
     $.get('./nounlist.txt', {}, (content) => {
       this.nouns = content.split('\n');
     });
+
+    this.addListeners()
   }
 
   componentDidMount() {
@@ -32,8 +42,17 @@ class App extends Component {
     this.fetchGroups()
     this.fetchMatches()
 
-
     this.client = new googleImages('004764128469374828995:febdo0di9ju', 'AIzaSyDbbEZdAYhyCIIRaiIyLulbQz29owX4ihU')
+  }
+
+  addListeners() {
+    this.requeueMatchHandler = (match) => {
+      this.requeueMatch(match)
+    }
+
+    this.submitMatchHandler = (match) => {
+      this.submitMatch(match)
+    }
   }
 
   /*
@@ -50,7 +69,7 @@ class App extends Component {
       },
       method: 'PUT',
     })
-    .then(response => {
+    .then(() => {
       this.fetchGroups()
       this.fetchMatches()
     }) 
@@ -64,7 +83,7 @@ class App extends Component {
       },
       method: 'POST',
     })
-    .then(response => {
+    .then(() => {
       this.fetchPlayers()
       this.fetchTeams()
       this.fetchGroups()
@@ -211,7 +230,6 @@ class App extends Component {
     // for forcing a team to be premade
     var tempTeamArray = []
     for(var i = 0; i < names.length; i++) {
-      console.log(names[i])
       if(names[i].name === 'test1' || names[i].name === 'test6') {
         tempTeamArray.push(names[i])
         names.splice(i, 1)
@@ -256,34 +274,30 @@ class App extends Component {
     this.setState({ playerName: event.target.value });
   }
 
-  requeueMatch(event) {
-    event.preventDefault()
-
+  requeueMatch(match) {
     const matches = this.state.matches
-    const index = $(event.target).data('index')
+    const index = $(match).data('index')
     matches[0].todo.push(matches[0].todo.splice(index, 1)[0])
     this.setState({ matches })
   }
 
-  submitMatch(event) {
-    event.preventDefault()
-
-    var winningTeamId = $("input[name='winner']:checked", event.target).val();
-    var losingTeamId = $("input[name='winner']:not(:checked)", event.target).val();
+  submitMatch(match) {
+    var winningTeamId = $("input[name='winner']:checked", match).val();
+    var losingTeamId = $("input[name='winner']:not(:checked)", match).val();
   
     if(!winningTeamId) {
       alert('Must select the team who won to submit!')
       return
     }
 
-    var loserExtraCups = parseInt($("input[name='loserExtraCups']", event.target).val(), 10);
+    var loserExtraCups = parseInt($("input[name='loserExtraCups']", match).val(), 10);
 
     if(isNaN(loserExtraCups)) {
       alert('Must include # of extra cups to submit!')
       return
     }
 
-    var teamId1 = $("input[name='winner']", event.target).val()
+    var teamId1 = $("input[name='winner']", match).val()
     var teamId2 = winningTeamId === teamId1 ? losingTeamId : winningTeamId;
 
     var matches = this.state.matches[0]
@@ -381,20 +395,6 @@ class App extends Component {
     return this.setDataState('matches', 'http://localhost:8000/matches/')
   }
 
-  getPlayerById(id) {
-    if(!this.state.players) return ''
-    return this.state.players.filter((player) => {
-      return player._id === id
-    })[0]
-  }
-
-  getTeamById(id) {
-    if(!this.state.teams) return ''
-    return this.state.teams.filter((team) => {
-      return team._id === id
-    })[0]
-  }
-
   getRandomAdjective() {
     const string = this.adjectives[Math.floor(Math.random() * this.adjectives.length)] 
     return string.charAt(0).toUpperCase() + string.slice(1)
@@ -403,197 +403,6 @@ class App extends Component {
   getRandomNoun() {
     const string = this.nouns[Math.floor(Math.random() * this.nouns.length)] 
     return string.charAt(0).toUpperCase() + string.slice(1)
-  }
-
-  /*
-   *
-   * RENDER FUNCTIONS
-   *
-   */
-
-  renderPlayers(players) {
-    const elements = []
-    players.forEach((item, index) => {
-      elements.push(<div key={ item._id } className="player">{ item.name }</div>)
-    })
-
-    return elements
-  }
-
-  renderTeams(teams) {
-    if (!this.state.players) return ''
-
-    const elements = []
-    teams.forEach((item, index) => {
-      const player1 = this.getPlayerById(item.playerId1)
-      const player2 = this.getPlayerById(item.playerId2)
-
-      if(!player1 || !player2) return ''
-      elements.push(
-        <div key={ item._id } className="team">
-          <div className="team-name">{ item.name }</div>
-          <div className="team-players">
-            <div className="team-player">{ player1.name }</div>
-            <div className="team-and">and</div>
-            <div className="team-player">{ player2.name }</div>
-          </div>
-          <img className="team-image" alt="Team" src={ item.image }/>
-        </div>
-      )
-    })
-
-    return elements
-  }
-
-  renderGroupsTeam(team) {
-    const teamObject = this.getTeamById(team.teamId)
-    
-    if (!teamObject) {
-      // race condition: might not be set yet
-      return 
-    }
-
-    const teamName = teamObject.name
-
-    return (
-      <div key={ team.teamId } className="group-team">
-        <div className="group-team-name">{ teamName }</div>
-        <div className="group-team-statistics">
-          <div className="group-team-wins"><span>W:</span>{ team.wins } </div>
-          <div className="group-team-losses"><span>L:</span> { team.losses }</div>
-          <div className="group-team-extracups"><span>Extra:</span> { team.extraCups }</div>
-        </div>
-      </div>
-    )
-  }
-
-  renderGroup(groupName, group) {
-    var groupTeams = []
-    group.forEach((team) => groupTeams.push(this.renderGroupsTeam(team)))
-    return (
-      <div key={ groupName } className="group">
-        <div className="group-title">{ groupName }</div>
-        { groupTeams }
-      </div>
-    )
-  }
-
-  renderGroups(groups) {
-    const groupA = groups[0].a.sort(this.compareTeams)
-    const groupB = groups[0].b.sort(this.compareTeams)
-    const groupC = groups[0].c.sort(this.compareTeams)
-    const groupD = groups[0].d.sort(this.compareTeams)
-
-    var groupParent = []
-    groupParent.push(this.renderGroup('Group A', groupA))
-    groupParent.push(this.renderGroup('Group B', groupB))
-    groupParent.push(this.renderGroup('Group C', groupC))
-    groupParent.push(this.renderGroup('Group D', groupD))
-
-    return groupParent
-  }
-
-  renderCurrentMatches(matches) {
-    if(!matches[0].todo || matches[0].todo.length === 0)
-      return ''
-
-    const elements = []
-    for(var i = 0; i < 3; i++) {
-      const item = matches[0].todo[i]
-      if(!item) return elements
-
-      const team1 = this.getTeamById(item.teamId1)
-      const team2 = this.getTeamById(item.teamId2)
-      elements.push(
-        <div key={ item.teamId1 + item.teamId2 } className="match">
-          <div className="match-team-name">{ team1.name }<span className="vs">VS</span>{ team2.name }</div>
-          <form onSubmit={ this.submitMatch }>
-            <b>Who won?</b><br/>
-            <input type="radio" name="winner" value={ item.teamId1 }/>{ team1.name }<br/>
-            <input type="radio" name="winner" value={ item.teamId2 }/>{ team2.name }<br/>
-            <b>How many cups did the losing team have remaining?</b><br/>
-            <input type="text" name="loserExtraCups" />
-            <input type="submit" value="Submit"/>
-          </form>
-          <form data-index={ i } onSubmit={ this.requeueMatch }>
-            <input type="submit" value="Requeue Match"/>
-          </form>
-        </div>
-      )
-    }
-
-    return elements
-  }
-
-  renderUpcomingMatches(matches) {
-    if(!matches[0].todo || matches[0].todo.length === 0)
-      return ''
-
-    const elements = []
-    matches[0].todo.forEach((item, index) => {
-      if(index <= 2) return
-
-      const team1 = this.getTeamById(item.teamId1)
-      const team2 = this.getTeamById(item.teamId2)
-      elements.push(
-        <div key={ item.teamId1 + item.teamId2 } className="match">
-          <div className="match-team-name">{ team1.name }<span className="vs">VS</span>{ team2.name }</div>
-        </div>
-      )
-    })
-
-    return elements
-  }
-
-  renderCompleted(matches) {
-    if(!matches[0].completed || matches[0].completed.length === 0)
-      return ''
-
-    const elements = []
-    matches[0].completed.forEach((item, index) => {
-      const team1 = this.getTeamById(item.teamId1)
-      const team2 = this.getTeamById(item.teamId2)
-      if (item.winner === item.teamId1) {
-        elements.push(
-          <div key={ item.teamId1 + item.teamId2 } className="match">
-            <div className="match-team-name">
-              <span className="winner">{ team1.name }</span>
-              <span className="vs">VS</span>
-              <span className="loser">{ team2.name }</span>
-            </div>
-            <div className="match-extra-cups">Extra cups: { item.loserExtraCups }</div>
-          </div>
-        )
-      } else {
-        elements.push(
-          <div key={ item.teamId1 + item.teamId2 } className="match">
-            <div className="match-team-name">
-              <span className="loser">{ team1.name }</span>
-              <span className="vs">VS</span>
-              <span className="winner">{ team2.name }</span>
-            </div>
-            <div className="match-extra-cups">Extra cups: { item.loserExtraCups }</div>
-          </div>
-        )
-      }
-    })
-
-    return elements
-  }
-
-  compareTeams(team1, team2) {
-    if (team1.wins < team2.wins)
-      return 1;
-    if (team1.wins > team2.wins)
-      return -1;
-    if (team1.wins === team2.wins) {
-      if (team1.extraCups < team2.extraCups)
-        return -1;
-      if (team1.extraCups > team2.extraCups)
-        return 1;
-    }
-
-    return 0;
   }
 
   renderSubmitPlayer() {
@@ -614,101 +423,38 @@ class App extends Component {
     )
   }
 
-  clickTeamIntro(event) {
-    const playersObject = $($('.team-intro-players', event.currentTarget)[0])
-    if(playersObject.hasClass('hidden')) {
-      playersObject.removeClass('hidden')
-    } else {
-      $(event.currentTarget).remove()
-    }
-  }
-
-  renderTeamIntro(team) {
-    const player1 = this.getPlayerById(team.playerId1)
-    const player2 = this.getPlayerById(team.playerId2)
-
-    const key = 'intro' + team.name
-    return (
-      <div key={ key } className="team-intro" onClick={ this.clickTeamIntro }>
-        <div className="team-intro-name">{ team.name }</div>
-        <img className="team-intro-image" alt="Team" src={ team.image }/>
-        <div className="team-intro-players hidden">
-          <div className="team-intro-player">{ player1.name }</div>
-          <div className="team-intro-and">and</div>
-          <div className="team-intro-player">{ player2.name }</div>
-        </div>
-      </div>
-    )
-  }
-
-  removeIntros(event) {
-    localStorage.setItem('renderIntro', false)
-  }
-
-  renderTeamIntros() {
-    return (
-      <div className="team-intro-parent">
-        <form onSubmit={ this.removeIntros }>
-          <input type="submit" value="Exit"/>
-        </form>
-        { this.state.teams.map((team) => this.renderTeamIntro(team)) }
-      </div>
-    )
-  }
-
   render() {
     if (!this.state) return ''
 
     const tournamentStarted = this.state.teams && this.state.teams.length > 0
-    const renderIntro = localStorage.getItem('renderIntro') === 'true'
+    const renderIntro 
+      = tournamentStarted && localStorage.getItem('renderIntro') === 'true'
 
     return (
       <div className="App">
         
         { !tournamentStarted && this.renderSubmitPlayer() }
         { !tournamentStarted && this.renderStartTournament() }
-        { tournamentStarted && renderIntro && this.renderTeamIntros() }
+        { renderIntro && <TournamentIntros players={ this.state.players }
+          teams={ this.state.teams }/> }
 
-        <div className="player-parent">
-          <div className="title">Players{ this.state.players 
-            ?  ' (' + this.state.players.length + ')' : '' }</div>
-          { this.state.players ? this.renderPlayers(this.state.players) : 'No players yet' }
-        </div>
-        
-        <div className="team-parent">
-          <div className="title">Teams</div>
-          { this.state.teams && this.state.teams.length ? this.renderTeams(this.state.teams) : 'TBD' }
-        </div>
+        <TournamentPlayers players={ this.state.players }/>
+        <TournamentTeams teams={ this.state.teams } 
+          players={ this.state.players }/>
 
-        <div className="groups-current-parent">
-          <div className="groups-parent">
-            <div className="title">Groups</div>
-            <div className="groups">
-              { this.state.groups && this.state.groups.length ? this.renderGroups(this.state.groups) : 'TBD' }
-            </div>
-          </div>
-          <div className="groups-parent">
-            <div className="title">Current Matches</div>
-            <div className="matches">
-              { this.state.matches && this.state.matches.length ? this.renderCurrentMatches(this.state.matches) : 'TBD' }
-            </div>
-          </div>
+        <div className="groups-current-matches-parent">
+          <TournamentGroups groups={ this.state.groups } 
+            teams={ this.state.teams }/>
+          <TournamentCurrentMatches matches={ this.state.matches }
+            teams={ this.state.teams }
+            requeueMatchHandler={ this.requeueMatchHandler }
+            submitMatchHandler={ this.submitMatchHandler }/>
         </div>
 
-        <div className="matches-parent">
-          <div className="title">Upcoming Matches</div>
-          <div className="matches">
-            { this.state.matches && this.state.matches.length ? this.renderUpcomingMatches(this.state.matches) : 'TBD' }
-          </div>
-        </div>
-
-        <div className="completed-parent">
-          <div className="title">Completed</div>
-          <div className="completed">
-            { this.state.matches && this.state.matches.length ? this.renderCompleted(this.state.matches) : 'TBD' }
-          </div>
-        </div>
-
+        <TournamentUpcomingMatches matches={ this.state.matches }
+          teams={ this.state.teams }/>
+        <TournamentCompletedMatches matches={ this.state.matches }
+          teams={ this.state.teams }/>
       </div>
     );
   }

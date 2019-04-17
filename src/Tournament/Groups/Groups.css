@@ -1,0 +1,51 @@
+.TournamentGroups {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 20px;
+}
+
+.groups {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.group {
+  margin: 0 40px 0 0;
+  min-width: 100px;
+}
+
+.group-title {
+  font-weight: bold;
+  font-size: 18px;
+  border-bottom: 1px solid #333;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.group-team {
+  margin-bottom: 20px;
+}
+
+.group-team-name {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.group-team-statistics div {
+  font-size: 12px;
+}
+
+.group-team-statistics div span {
+  font-weight: bold;
+}
+
+.group-team-wins {
+  color: rgba(0, 200, 0, 1);
+}
+
+.group-team-losses {
+  color: rgba(200, 0, 0, 1);
+}
