@@ -7,46 +7,57 @@
   min-width: 400px;
 }
 
-.team {
-  position: relative;
+.team-intro-parent {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.team-intro {
   display: flex;
-  flex-direction: column;
   align-items: center;
-
-  width: 100%;
-  padding: 5px;
-  border: 1px solid black;
-  border-bottom: none;
-  text-align: center;
-  background-color: rgba(0, 0, 220, 0.5);
+  justify-content: center;
+  flex-direction: column;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  color: white;
 }
 
-.team:nth-child(odd) {
-  background-color: rgba(0, 0, 130, 0.5);
+.team-intro-name {
+  font-size: 80px;
 }
 
-.team:last-child {
-  border-bottom: 1px solid black;
+.team-intro-image {
+  max-width: 100%;
+  max-height: 60%;
+  margin: 50px;
 }
 
-.team-name {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.team-players {
+.team-intro-players {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: center;
-  width: 100%;
+  justify-content: center;
 }
 
-.team-and {
-  margin: 0 5px;
+.team-intro-players.hidden {
+  opacity: 0;
 }
 
-.team-image {
-  max-width: 400px;
-  max-height: 200px;
+.team-intro-player {
+  font-size: 60px;
+  margin: 0 30px;
+}
+
+.team-intro-and {
+  font-size: 40px;
 }

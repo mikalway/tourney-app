@@ -7,6 +7,18 @@
   min-width: 400px;
 }
 
+.header {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+.header > button {
+  position: absolute;
+  left: 100px;
+  width: 150px;
+}
+
 .team {
   position: relative;
   display: flex;
@@ -47,6 +59,11 @@
 }
 
 .team-image {
+  display: none;
   max-width: 400px;
   max-height: 200px;
+}
+
+.team-image.visible {
+  display: block;
 }

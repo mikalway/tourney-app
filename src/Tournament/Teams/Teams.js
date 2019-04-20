@@ -1,7 +1,20 @@
 import React, { Component } from 'react'
 import './Teams.css'
 
+import $ from 'jquery'
+
 class TournamentTeams extends Component {
+  constructor() {
+    super ()
+    this.addListeners()
+  }
+
+  addListeners() {
+    this.toggleImages = () => {
+      $('.team-image').toggleClass('visible')
+    }
+  }
+
   getPlayerById(id) {
     return this.props.players.filter((player) => {
       return player._id === id
@@ -37,7 +50,12 @@ class TournamentTeams extends Component {
 
     return (
       <div className={ this.constructor.name }>
-        <div className="title">Teams</div>
+        <div className="header">
+          <div className="title">Teams</div>
+          <button type="button" onClick={ this.toggleImages }>
+            Toggle Images 
+          </button>
+        </div>
           { teams && teams.length ? this.renderTeams(teams) : 'TBD' }
       </div>
     )

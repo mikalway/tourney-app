@@ -6,73 +6,51 @@
 .pre-tournament{
   display: flex;
   flex-direction: row;
+  width: 100vw;
+  height: 100vh;
 }
 
 .tournament-info {
   display: flex;
   flex-direction: row;
+  position: relative;
+  min-width: 100vw;
+  min-height: 100vh;
 }
 
-.team-intro-parent {
+.tournament-info:after {
+  content: "";
+  background-image: url(https://i.pinimg.com/originals/a5/be/35/a5be3512095384c4d9c1dbe8e336cda7.jpg);
+  background-repeat: repeat;
+  opacity: 0.05;
+  width: 100%;
+  height: 100%;
   position: absolute;
-  width: 100vw;
-  height: 100vh;
-  background-color: black;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-}
-
-.team-intro {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  background-color: black;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  color: white;
-}
-
-.team-intro-name {
-  font-size: 80px;
-}
-
-.team-intro-image {
-  max-width: 1000px;
-  max-height: 1000px;
-  margin: 50px;
-}
-
-.team-intro-players {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-
-.team-intro-players.hidden {
-  opacity: 0;
-}
-
-.team-intro-player {
-  font-size: 60px;
-  margin: 0 30px;
-}
-
-.team-intro-and {
-  font-size: 40px;
+  z-index: -1;   
 }
 
 #submit-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin: 20px;
-  font-size: 26px;
+  font-size: 30px;
+  position: absolute;
+  left: 49%;
+  top: 38%;
+  transform: translateX(-50%);
+  font-family: 'Verdana';
+  color: black;
 }
 
+#submit-player > * {
+  font-family: 'Verdana';
+  border-radius: 8px;
+  margin: 16px 5px 0 5px;
+  padding: 0 5px;
+  background-color: ;
+}
 
 .title {
   position: relative;

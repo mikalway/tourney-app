@@ -46,9 +46,9 @@ class TournamentIntros extends Component {
 
     return (
       <div className={ this.constructor.name }>
-        <form onSubmit={ this.removeIntros }>
+{/*        <form onSubmit={ this.removeIntros }>
           <input type="submit" value="Exit"/>
-        </form>
+        </form>*/}
         { teams.map((team) => this.renderTeamIntro(team)) }
       </div>
     )

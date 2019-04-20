@@ -13,8 +13,9 @@ import TournamentCompletedMatches from './Tournament/Matches/Completed/Completed
 import $ from 'jquery'
 import googleImages from 'google-images'
 
-const NUM_GROUPS = 4
+const NUM_GROUPS = 2
 const NUM_ROUNDS = 2
+const START_ENABLED = true
 
 class App extends Component {
   constructor() {
@@ -104,7 +105,6 @@ class App extends Component {
     return fetch(url)
       .then((response) => response.json())
       .then((responseJSON) => {
-        console.log(responseJSON, stateVarName)
         this.setState({ [stateVarName]: responseJSON })
       })
   }
@@ -299,6 +299,7 @@ class App extends Component {
       if(matches.todo[i].teamId1 === teamId1 
         && matches.todo[i].teamId2 === teamId2) {
           matches.todo.splice(i, 1)
+        break
       }
     }
     
@@ -364,7 +365,7 @@ class App extends Component {
   renderSubmitPlayer() {
     return (
       <form id="submit-player" onSubmit={ this.submitPlayer }>
-        Full name:
+        Enter Name
         <input type="text" name="name" onChange={ this.handleNameChange }/>
         <input type="submit" value="Submit"/>
       </form>
@@ -383,7 +384,8 @@ class App extends Component {
     return (
       <div className="pre-tournament">
         { this.renderSubmitPlayer() }
-        { this.renderStartTournament() }
+        { START_ENABLED && this.renderStartTournament() }
+
         <TournamentPlayers players={ this.state.players }/>
       </div>
 
