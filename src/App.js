@@ -13,6 +13,9 @@ import TournamentCompletedMatches from './Tournament/Matches/Completed/Completed
 import $ from 'jquery'
 import googleImages from 'google-images'
 
+const NUM_GROUPS = 4
+const NUM_ROUNDS = 2
+
 class App extends Component {
   constructor() {
     super()
@@ -69,10 +72,6 @@ class App extends Component {
       },
       method: 'PUT',
     })
-    .then(() => {
-      this.fetchGroups()
-      this.fetchMatches()
-    }) 
   }
 
   postData(url, data) {
@@ -83,18 +82,29 @@ class App extends Component {
       },
       method: 'POST',
     })
-    .then(() => {
-      this.fetchPlayers()
-      this.fetchTeams()
-      this.fetchGroups()
-      this.fetchMatches()
-    }) 
+  }
+
+  fetchPlayers() {
+    return this.setDataState('players', 'http://localhost:8000/players/')
+  }
+
+  fetchTeams() {
+    return this.setDataState('teams', 'http://localhost:8000/teams/')
+  }
+
+  fetchGroups() {
+    return this.setDataState('groups', 'http://localhost:8000/groups/')
+  }
+
+  fetchMatches() {
+    return this.setDataState('matches', 'http://localhost:8000/matches/')
   }
 
   setDataState(stateVarName, url) {
     return fetch(url)
       .then((response) => response.json())
       .then((responseJSON) => {
+        console.log(responseJSON, stateVarName)
         this.setState({ [stateVarName]: responseJSON })
       })
   }
@@ -108,7 +118,7 @@ class App extends Component {
   startTournament(event) {
     event.preventDefault()
 
-    var teams = this.randomizeTeams(this.state.players, this.state.players.length / 2)
+    var teams = this.createGroupings(this.state.players, this.state.players.length / 2)
 
     var parsedTeams = []
     var postedTeamCount = 0
@@ -127,10 +137,10 @@ class App extends Component {
         tempTeam.image = images[imageIndex].url
         tempTeam.backupImage = images[(imageIndex + 1) % 10].url
         parsedTeams.push(tempTeam)
-        this.postData('http://localhost:8000/teams/', tempTeam).then((response) => {
+        this.postData('http://localhost:8000/teams/', tempTeam).then(() => {
           postedTeamCount++;
           if(postedTeamCount === teams.length) {
-            this.fetchTeams().then((response) => {
+            this.fetchTeams().then(() => {
               this.initializeGroups(this.state.teams)
             })
           }
@@ -140,115 +150,53 @@ class App extends Component {
   }
 
   initializeGroups(teams) {
-    var groups = this.randomizeTeams(teams, 4)
-    var parsedGroups = {}
+    var groups = this.createGroupings(teams, NUM_GROUPS)
+    var parsedGroups = []
 
-    groups.forEach((teams, index) => {
-      var tempGroup = []
+    groups.forEach((group, index) => {
+      var tempGroup = {}
+      tempGroup.teams = []
+      tempGroup.index = index
 
-      teams.forEach((element) => {
+      group.forEach((team) => {
         var tempTeam = {}
-        tempTeam.teamId = element._id
+        tempTeam.teamId = team._id
         tempTeam.wins = 0
         tempTeam.losses = 0
         tempTeam.extraCups = 0
 
-        tempGroup.push(tempTeam)
+        tempGroup.teams.push(tempTeam)
       })
 
-      switch(index) {
-        case 3:
-          parsedGroups.a = tempGroup
-          break
-        case 2:
-          parsedGroups.b = tempGroup
-          break
-        case 1: 
-          parsedGroups.c = tempGroup
-          break
-        case 0:
-          parsedGroups.d = tempGroup
-          break
-        default:
-          break
-      }
+      parsedGroups.push(tempGroup)
     })
 
-    this.postData('http://localhost:8000/groups/', parsedGroups).then((response) => {
-      this.fetchGroups().then((response) => {
-        this.initializeMatches(this.state.groups[0])
-      })
+
+    this.postData('http://localhost:8000/groups/', parsedGroups).then(() => {
+      this.initializeMatches(parsedGroups)
     })
   }
 
   initializeMatches(groups) {
     var matches = []
 
-    var matchesA = this.getMatches(groups.a)
-    var matchesB = this.getMatches(groups.b)
-    var matchesC = this.getMatches(groups.c)
-    var matchesD = this.getMatches(groups.d)
-
-    for(var i = 0; i < matchesA.length; i++) {
-      matches.push(matchesA[i]);
-      if(matchesB.length > i)
-        matches.push(matchesB[i]) 
-      if(matchesC.length > i)
-        matches.push(matchesC[i]) 
-      if(matchesD.length > i)
-        matches.push(matchesD[i]) 
-    }
+    groups.forEach((group) => {
+      const groupMatches = this.getMatches(group.teams)
+      groupMatches.forEach((match) => {
+        matches.push(match)
+      })
+    })
 
     var object = {}
-    object.todo = matches
+    object.todo = this.shuffle(matches)
     object.completed = []
 
-    this.postData('http://localhost:8000/matches/', object).then((response) => {
-      
+    this.postData('http://localhost:8000/matches/', object).then(() => {
+      this.fetchPlayers()
+      this.fetchTeams()
+      this.fetchGroups()
+      this.fetchMatches()
     })
-  }
-
-  getMatches(teams) {
-    var matches = []
-    for(var i = 0; i < teams.length; i++) {
-      for(var j = i + 1; j < teams.length; j++){
-        var tempMatch = {}
-        tempMatch.teamId1 = teams[i].teamId
-        tempMatch.teamId2 = teams[j].teamId
-        tempMatch.winner = null
-        tempMatch.loserExtraCups = 0
-        matches.push(tempMatch)
-      }
-    }
-
-    return matches
-  }
-
-  randomizeTeams(names, teamsCount) {
-    var teams = []
-
-    // for forcing a team to be premade
-    var tempTeamArray = []
-    for(var i = 0; i < names.length; i++) {
-      if(names[i].name === 'test1' || names[i].name === 'test6') {
-        tempTeamArray.push(names[i])
-        names.splice(i, 1)
-        i--
-      }  
-    }
-    
-    if(tempTeamArray.length === 1) {
-      names.push(tempTeamArray[0])
-    } else if(tempTeamArray.length === 2) {
-      teamsCount--
-      teams.push(tempTeamArray)
-    }
-
-    while (teamsCount > 0) {
-      teams.push(this.shuffle(names).splice(0, Math.floor(names.length / teamsCount)))
-      teamsCount--;
-    }
-    return teams
   }
 
   shuffle(array) {
@@ -258,16 +206,61 @@ class App extends Component {
     while (0 !== currentIndex) {
 
       // Pick a remaining element...
-      randomIndex = Math.floor(Math.random() * currentIndex);
+      randomIndex = Math.floor(Math.random() * currentIndex)
       currentIndex -= 1;
 
       // And swap it with the current element.
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
+      temporaryValue = array[currentIndex]
+      array[currentIndex] = array[randomIndex]
+      array[randomIndex] = temporaryValue
     }
 
-    return array;
+    return array
+  }
+
+  getMatches(teams) {
+    var matches = []
+    for(var currentRound = 0; currentRound < NUM_ROUNDS; currentRound++) {
+      for(var i = 0; i < teams.length; i++) {
+        for(var j = i + 1; j < teams.length; j++){
+          var tempMatch = {}
+          tempMatch.teamId1 = teams[i].teamId
+          tempMatch.teamId2 = teams[j].teamId
+          tempMatch.winner = null
+          tempMatch.loserExtraCups = 0
+          matches.push(tempMatch)
+        }
+      }
+    }
+
+    return matches
+  }
+
+  createGroupings(singleItems, numGroupings) {
+    var groupings = []
+
+    // for forcing a team to be premade
+    var tempTeamArray = []
+    for(var i = 0; i < singleItems.length; i++) {
+      if(singleItems[i].name === 'test1' || singleItems[i].name === 'test6') {
+        tempTeamArray.push(singleItems[i])
+        singleItems.splice(i, 1)
+        i--
+      }  
+    }
+    
+    if(tempTeamArray.length === 1) {
+      singleItems.push(tempTeamArray[0])
+    } else if(tempTeamArray.length === 2) {
+      numGroupings--
+      groupings.push(tempTeamArray)
+    }
+
+    while (numGroupings > 0) {
+      groupings.push(this.shuffle(singleItems).splice(0, Math.floor(singleItems.length / numGroupings)))
+      numGroupings--;
+    }
+    return groupings
   }
 
   handleNameChange(event) {
@@ -319,53 +312,28 @@ class App extends Component {
 
     this.putData('http://localhost:8000/matches/' + this.state.matches[0]._id, matches)
 
-    var groups = this.state.groups[0]
+    var groups = this.state.groups[0].groups
 
-    groups.a.forEach((element, index) => {
-      if(element.teamId === winningTeamId) {
-        element.wins = element.wins + 1
-        groups.a[index] = element
-      } else if (element.teamId === losingTeamId) {
-        element.losses = element.losses + 1
-        element.extraCups = element.extraCups + loserExtraCups
-        groups.a[index] = element
-      }
+    // TODO: find the actual group instead of looping through all?
+    groups.forEach((group, groupIndex) => {
+      group.teams.forEach((team, teamIndex) => {
+        if(team.teamId === winningTeamId) {
+          team.wins = team.wins + 1
+          groups[groupIndex][teamIndex] = team
+        } else if (team.teamId === losingTeamId) {
+          team.losses = team.losses + 1
+          team.extraCups = team.extraCups + loserExtraCups
+          groups[groupIndex].teams[teamIndex] = team
+        }
+      })
     })
 
-    groups.b.forEach((element, index) => {
-      if(element.teamId === winningTeamId) {
-        element.wins = element.wins + 1
-        groups.b[index] = element
-      } else if (element.teamId === losingTeamId) {
-        element.losses = element.losses + 1
-        element.extraCups = element.extraCups + loserExtraCups
-        groups.b[index] = element
-      }
+    this.putData('http://localhost:8000/groups/' + this.state.groups[0]._id, groups).then(() => {
+      
+      // TODO: Just update state
+      this.fetchMatches()
+      this.fetchGroups()
     })
-
-   groups.c.forEach((element, index) => {
-      if(element.teamId === winningTeamId) {
-        element.wins = element.wins + 1
-        groups.c[index] = element
-      } else if (element.teamId === losingTeamId) {
-        element.losses = element.losses + 1
-        element.extraCups = element.extraCups + loserExtraCups
-        groups.c[index] = element
-      }
-    })
-
-    groups.d.forEach((element, index) => {
-      if(element.teamId === winningTeamId) {
-        element.wins = element.wins + 1
-        groups.d[index] = element
-      } else if (element.teamId === losingTeamId) {
-        element.losses = element.losses + 1
-        element.extraCups = element.extraCups + loserExtraCups
-        groups.d[index] = element
-      }
-    })
-    
-    this.putData('http://localhost:8000/groups/' + this.state.groups[0]._id, groups)
   }
 
   submitPlayer(event) {
@@ -375,24 +343,12 @@ class App extends Component {
     if (!this.playerSubmitArea) 
       this.playerSubmitArea = $('#submit-player input[type="text"], textarea')
 
-    this.postData('http://localhost:8000/players/', { name: this.state.playerName })
+    this.postData('http://localhost:8000/players/', { name: this.state.playerName }).then(() => {
+      // TODO: Just update state
+      this.fetchPlayers()
+    })
+
     this.playerSubmitArea.val('')
-  }
-
-  fetchPlayers() {
-    return this.setDataState('players', 'http://localhost:8000/players/')
-  }
-
-  fetchTeams() {
-    return this.setDataState('teams', 'http://localhost:8000/teams/')
-  }
-
-  fetchGroups() {
-    return this.setDataState('groups', 'http://localhost:8000/groups/')
-  }
-
-  fetchMatches() {
-    return this.setDataState('matches', 'http://localhost:8000/matches/')
   }
 
   getRandomAdjective() {
@@ -423,30 +379,30 @@ class App extends Component {
     )
   }
 
-  render() {
-    if (!this.state) return ''
-
-    const tournamentStarted = this.state.teams && this.state.teams.length > 0
-    const renderIntro 
-      = tournamentStarted && localStorage.getItem('renderIntro') === 'true'
-
+  renderPreTournament() {
     return (
-      <div className="App">
-        
-        { !tournamentStarted && this.renderSubmitPlayer() }
-        { !tournamentStarted && this.renderStartTournament() }
-        { renderIntro && <TournamentIntros players={ this.state.players }
-          teams={ this.state.teams }/> }
+      <div className="pre-tournament">
+        { this.renderSubmitPlayer() }
+        { this.renderStartTournament() }
+        <TournamentPlayers players={ this.state.players }/>
+      </div>
 
+    )
+  }
+
+  renderTournamentInfo () {
+    return (
+      <div className="tournament-info">
         <TournamentPlayers players={ this.state.players }/>
         <TournamentTeams teams={ this.state.teams } 
           players={ this.state.players }/>
 
         <div className="groups-current-matches-parent">
-          <TournamentGroups groups={ this.state.groups } 
+          <TournamentGroups groups={ this.state.groups[0].groups } 
             teams={ this.state.teams }/>
           <TournamentCurrentMatches matches={ this.state.matches }
             teams={ this.state.teams }
+            players={ this.state.players }
             requeueMatchHandler={ this.requeueMatchHandler }
             submitMatchHandler={ this.submitMatchHandler }/>
         </div>
@@ -455,6 +411,29 @@ class App extends Component {
           teams={ this.state.teams }/>
         <TournamentCompletedMatches matches={ this.state.matches }
           teams={ this.state.teams }/>
+      </div>
+    )
+  }
+
+  render() {
+    if (!this.state) return ''
+
+    const tournamentStarted 
+      = this.state.teams && this.state.teams.length > 0
+      && this.state.groups && this.state.groups.length > 0
+      && this.state.matches && this.state.matches.length > 0 
+
+    const renderIntro 
+      = tournamentStarted && localStorage.getItem('renderIntro') === 'true'
+      
+    return (
+      <div className="App">
+        { !tournamentStarted && this.renderPreTournament() }
+
+        { renderIntro && <TournamentIntros players={ this.state.players }
+          teams={ this.state.teams }/> }
+
+        { tournamentStarted && this.renderTournamentInfo() }
       </div>
     );
   }

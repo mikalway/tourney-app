@@ -3,6 +3,16 @@
   flex-direction: row;
 }
 
+.pre-tournament{
+  display: flex;
+  flex-direction: row;
+}
+
+.tournament-info {
+  display: flex;
+  flex-direction: row;
+}
+
 .team-intro-parent {
   position: absolute;
   width: 100vw;

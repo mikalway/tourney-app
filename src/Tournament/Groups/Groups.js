@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import './Groups.css'
 
+const capitalAAscii = 65
 class TournamentGroups extends Component {
   getTeamById(id) {
     return this.props.teams.filter((team) => {
@@ -32,6 +33,7 @@ class TournamentGroups extends Component {
 
   renderGroup(groupName, group) {
     var groupTeams = []
+    console.log(group)
     group.forEach((team) => groupTeams.push(this.renderGroupsTeam(team)))
     return (
       <div key={ groupName } className="group">
@@ -57,17 +59,18 @@ class TournamentGroups extends Component {
   }
 
   renderGroups(groups) {
-    const groupA = groups[0].a.sort(this.compareTeams)
-    const groupB = groups[0].b.sort(this.compareTeams)
-    const groupC = groups[0].c.sort(this.compareTeams)
-    const groupD = groups[0].d.sort(this.compareTeams)
+    const sortedGroups = []
+    console.log(groups)
+    groups.forEach((group) => {
+      sortedGroups.push(group.teams.sort(this.compareTeams))
+    })
 
     var groupParent = []
-    groupParent.push(this.renderGroup('Group A', groupA))
-    groupParent.push(this.renderGroup('Group B', groupB))
-    groupParent.push(this.renderGroup('Group C', groupC))
-    groupParent.push(this.renderGroup('Group D', groupD))
-
+    sortedGroups.forEach((group, index) => {
+      const groupTitle = 'Group ' + String.fromCharCode(capitalAAscii + index)
+      groupParent.push(this.renderGroup(groupTitle, group))
+    })
+    
     return groupParent
   }
   render() {

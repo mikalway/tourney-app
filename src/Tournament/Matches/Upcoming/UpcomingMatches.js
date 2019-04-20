@@ -19,7 +19,7 @@ class TournamentUpcomingMatches extends Component {
       const team1 = this.getTeamById(item.teamId1)
       const team2 = this.getTeamById(item.teamId2)
       elements.push(
-        <div key={ item.teamId1 + item.teamId2 } className="match">
+        <div key={ item.teamId1 + item.teamId2 + Math.random() } className="match">
           <div className="match-team-name">{ team1.name }<span className="vs">VS</span>{ team2.name }</div>
         </div>
       )

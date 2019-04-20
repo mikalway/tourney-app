@@ -18,7 +18,7 @@ class TournamentCompletedMatches extends Component {
       const team2 = this.getTeamById(item.teamId2)
       if (item.winner === item.teamId1) {
         elements.push(
-          <div key={ item.teamId1 + item.teamId2 } className="match">
+          <div key={ item.teamId1 + item.teamId2 + Math.random() } className="match">
             <div className="match-team-name">
               <span className="winner">{ team1.name }</span>
               <span className="vs">VS</span>
@@ -29,7 +29,7 @@ class TournamentCompletedMatches extends Component {
         )
       } else {
         elements.push(
-          <div key={ item.teamId1 + item.teamId2 } className="match">
+          <div key={ item.teamId1 + item.teamId2 + Math.random() } className="match">
             <div className="match-team-name">
               <span className="loser">{ team1.name }</span>
               <span className="vs">VS</span>
