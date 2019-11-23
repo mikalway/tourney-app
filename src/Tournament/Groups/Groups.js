@@ -33,7 +33,6 @@ class TournamentGroups extends Component {
 
   renderGroup(groupName, group) {
     var groupTeams = []
-    console.log(group)
     group.forEach((team) => groupTeams.push(this.renderGroupsTeam(team)))
     return (
       <div key={ groupName } className="group">
@@ -60,7 +59,6 @@ class TournamentGroups extends Component {
 
   renderGroups(groups) {
     const sortedGroups = []
-    console.log(groups)
     groups.forEach((group) => {
       sortedGroups.push(group.teams.sort(this.compareTeams))
     })

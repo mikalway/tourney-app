@@ -22,6 +22,11 @@ class TournamentIntros extends Component {
     })[0]
   }
 
+  onTeamImageError (error, team) {
+    error.target.onerror = null
+    error.target.src = team.backupImage
+  }
+
   renderTeamIntro(team) {
     const player1 = this.getPlayerById(team.playerId1)
     const player2 = this.getPlayerById(team.playerId2)
@@ -30,7 +35,8 @@ class TournamentIntros extends Component {
     return (
       <div key={ key } className="team-intro" onClick={ this.clickTeamIntro }>
         <div className="team-intro-name">{ team.name }</div>
-        <img className="team-intro-image" alt="Team" src={ team.image }/>
+        <img className="team-intro-image" alt="Team" src={ team.image }
+          onError={ (error) => this.onTeamImageError(error, team) }/>
         <div className="team-intro-players hidden">
           <div className="team-intro-player">{ player1.name }</div>
           <div className="team-intro-and">and</div>
@@ -46,9 +52,9 @@ class TournamentIntros extends Component {
 
     return (
       <div className={ this.constructor.name }>
-{/*        <form onSubmit={ this.removeIntros }>
+        <form onSubmit={ this.removeIntros }>
           <input type="submit" value="Exit"/>
-        </form>*/}
+        </form>
         { teams.map((team) => this.renderTeamIntro(team)) }
       </div>
     )

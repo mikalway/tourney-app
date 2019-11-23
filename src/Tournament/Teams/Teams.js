@@ -21,6 +21,11 @@ class TournamentTeams extends Component {
     })[0]
   }
 
+  onTeamImageError (error, item) {
+    error.target.onerror = null
+    error.target.src = item.backupImage
+  }
+
   renderTeams(teams) {
     const elements = []
     teams.forEach((item) => {
@@ -36,7 +41,8 @@ class TournamentTeams extends Component {
             <div className="team-and">and</div>
             <div className="team-player">{ player2.name }</div>
           </div>
-          <img className="team-image" alt="Team" src={ item.image }/>
+          <img className="team-image" alt="Team" src={ item.image }
+             onError={ (error) => this.onTeamImageError(error, item) } />
         </div>
       )
     })

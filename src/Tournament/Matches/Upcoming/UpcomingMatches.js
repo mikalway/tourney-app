@@ -9,13 +9,8 @@ class TournamentUpcomingMatches extends Component {
   }
 
   renderMatches(matches) {
-    if(!matches[0].todo || matches[0].todo.length === 0)
-      return ''
-
     const elements = []
-    matches[0].todo.forEach((item, index) => {
-      if(index <= 2) return
-
+    matches.forEach((item) => {
       const team1 = this.getTeamById(item.teamId1)
       const team2 = this.getTeamById(item.teamId2)
       elements.push(

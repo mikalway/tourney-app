@@ -38,15 +38,12 @@ class TournamentCurrentMatches extends Component {
     return this.getPlayerById(team.playerId1).name 
       + ' and ' + this.getPlayerById(team.playerId2).name 
   }
+  
   renderMatches(matches) {
-    if(!matches[0].todo || matches[0].todo.length === 0)
-      return ''
-
     const elements = []
-    for(var i = 0; i < 3; i++) {
-      const item = matches[0].todo[i]
-      if(!item) return elements
 
+    matches.forEach((item, index) => {
+      console.log(item)
       const team1 = this.getTeamById(item.teamId1)
       const team2 = this.getTeamById(item.teamId2)
     
@@ -65,12 +62,12 @@ class TournamentCurrentMatches extends Component {
             <input type="text" name="loserExtraCups" />
             <input type="submit" value="Submit"/>
           </form>
-          <form data-index={ i } onSubmit={ this.requeueMatch }>
+          <form data-index={ index } onSubmit={ this.requeueMatch }>
             <input type="submit" value="Requeue Match"/>
           </form>
         </div>
       )
-    }
+    })
 
     return elements
   }

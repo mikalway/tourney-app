@@ -1,10 +1,8 @@
-.TournamentTeams {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  margin: 20px;
-  min-width: 400px;
+.TournamentIntros > form {
+  position: absolute;
+  z-index: 100000;
+  top: 0;
+  left: 0;
 }
 
 .team-intro-parent {

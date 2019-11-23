@@ -13,9 +13,10 @@ import TournamentCompletedMatches from './Tournament/Matches/Completed/Completed
 import $ from 'jquery'
 import googleImages from 'google-images'
 
-const NUM_GROUPS = 2
+const NUM_GROUPS = 4
 const NUM_ROUNDS = 2
 const START_ENABLED = true
+const NUM_CURR_MATCHES = 2
 
 class App extends Component {
   constructor() {
@@ -239,27 +240,40 @@ class App extends Component {
   createGroupings(singleItems, numGroupings) {
     var groupings = []
 
-    // for forcing a team to be premade
-    var tempTeamArray = []
-    for(var i = 0; i < singleItems.length; i++) {
-      if(singleItems[i].name === 'test1' || singleItems[i].name === 'test6') {
-        tempTeamArray.push(singleItems[i])
-        singleItems.splice(i, 1)
-        i--
-      }  
-    }
+    // for forcing a team to be premade -- CURRENTLY DISABLED
+
+    // var tempTeamArray = []
+    // for(var i = 0; i < singleItems.length; i++) {
+    //   if(singleItems[i].name === 'test1' || singleItems[i].name === 'test6') {
+    //     tempTeamArray.push(singleItems[i])
+    //     singleItems.splice(i, 1)
+    //     i--
+    //   }  
+    // }
     
-    if(tempTeamArray.length === 1) {
-      singleItems.push(tempTeamArray[0])
-    } else if(tempTeamArray.length === 2) {
-      numGroupings--
-      groupings.push(tempTeamArray)
-    }
+    // if(tempTeamArray.length === 1) {
+    //   singleItems.push(tempTeamArray[0])
+    // } else if(tempTeamArray.length === 2) {
+    //   numGroupings--
+    //   groupings.push(tempTeamArray)
+    // }
 
     while (numGroupings > 0) {
-      groupings.push(this.shuffle(singleItems).splice(0, Math.floor(singleItems.length / numGroupings)))
+      const grouping = this.shuffle(singleItems).splice(0, Math.floor(singleItems.length / numGroupings))
+
+      // Temporary prevention of Brian / Jordan being on the same team
+      if (singleItems.length !== 0 && grouping.length === 2 
+        && ((grouping[0].name === 'Brian Tran' && grouping[1].name === 'Jordan Carver')
+        || (grouping[0].name === 'Jordan Carver' && grouping[1].name === 'Brian Tran'))) {
+          singleItems.push(grouping[0])
+          singleItems.push(grouping[1])
+          continue
+      }
+
+      groupings.push(grouping)
       numGroupings--;
     }
+
     return groupings
   }
 
@@ -383,36 +397,68 @@ class App extends Component {
   renderPreTournament() {
     return (
       <div className="pre-tournament">
-        { this.renderSubmitPlayer() }
-        { START_ENABLED && this.renderStartTournament() }
+        <div>
+          { this.renderSubmitPlayer() }
+          { START_ENABLED && this.renderStartTournament() }
 
-        <TournamentPlayers players={ this.state.players }/>
+          <TournamentPlayers players={ this.state.players }/>
+        </div>
       </div>
 
     )
   }
+  
+  separateCurrentMatches (matches) {
+    if (!matches.length) return
+
+    const currentMatches = []
+    const upcomingMatches = []
+    const usedTeamIds = []
+
+    for (var i = 0; i < matches[0].todo.length; i++) {
+      const match = matches[0].todo[i]
+
+      if (currentMatches.length < NUM_CURR_MATCHES 
+        && !usedTeamIds.includes(match.teamId1) 
+        && !usedTeamIds.includes(match.teamId2)) {
+        currentMatches.push(match)
+        usedTeamIds.push(match.teamId1)
+        usedTeamIds.push(match.teamId2)
+      } else {
+        upcomingMatches.push(match)
+      }
+    }
+
+    if (currentMatches.length < NUM_CURR_MATCHES) {
+      upcomingMatches.splice(0, NUM_CURR_MATCHES - currentMatches.length).forEach((match) => currentMatches.push(match))
+    }
+
+    return { currentMatches, upcomingMatches }
+  }
 
   renderTournamentInfo () {
+    const { currentMatches, upcomingMatches } = this.separateCurrentMatches(this.state.matches)
+
     return (
       <div className="tournament-info">
-        <TournamentPlayers players={ this.state.players }/>
-        <TournamentTeams teams={ this.state.teams } 
-          players={ this.state.players }/>
+        <div><TournamentPlayers players={ this.state.players }/></div>
+        <div><TournamentTeams teams={ this.state.teams } 
+          players={ this.state.players }/></div>
 
         <div className="groups-current-matches-parent">
           <TournamentGroups groups={ this.state.groups[0].groups } 
             teams={ this.state.teams }/>
-          <TournamentCurrentMatches matches={ this.state.matches }
+          <TournamentCurrentMatches matches={ currentMatches }
             teams={ this.state.teams }
             players={ this.state.players }
             requeueMatchHandler={ this.requeueMatchHandler }
             submitMatchHandler={ this.submitMatchHandler }/>
         </div>
 
-        <TournamentUpcomingMatches matches={ this.state.matches }
-          teams={ this.state.teams }/>
-        <TournamentCompletedMatches matches={ this.state.matches }
-          teams={ this.state.teams }/>
+        <div><TournamentUpcomingMatches matches={ upcomingMatches }
+          teams={ this.state.teams }/></div>
+        <div><TournamentCompletedMatches matches={ this.state.matches }
+          teams={ this.state.teams }/></div>
       </div>
     )
   }
